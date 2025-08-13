@@ -3,6 +3,8 @@
 import React, { useMemo } from 'react';
 import { useSchedule } from "../lib/store";
 import { fromISO } from "../lib/time";
+import { Box, Paper, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 function minutesIntoDay(d: Date) {
   return d.getHours() * 60 + d.getMinutes();
@@ -23,37 +25,34 @@ export default function CalendarDay() {
   const events = state.events;
 
   const pxPerMin = 2; // 1 minute = 2px -> 10 hours = 1200px
-  const colWidth = 260;
 
   return (
-    <div className="flex w-full overflow-auto border rounded">
+    <Paper variant="outlined" sx={{ display: 'flex', width: '100%', overflow: 'auto' }}>
       {/* Time labels */}
-      <div className="w-16 shrink-0 border-r bg-black/2 dark:bg-white/2">
+      <Box sx={{ width: 64, flexShrink: 0, borderRight: theme => `1px solid ${theme.palette.divider}`, bgcolor: 'action.hover' }}>
         {hours.map((h, idx) => (
-          <div key={h} className="relative" style={{ height: `${60 * pxPerMin}px` }}>
-            <div className={`absolute ${idx===0? 'top-0':'-top-[10px]'} left-1 text-xs opacity-70`}>{h}:00</div>
-            <div className="w-full h-px bg-black/10 dark:bg-white/10 absolute top-0 left-0" />
-          </div>
+          <Box key={h} sx={{ position: 'relative', height: `${60 * pxPerMin}px` }}>
+            <Typography variant="caption" sx={{ position: 'absolute', left: 6, top: idx===0? 0 : -10, opacity: 0.7 }}>{h}:00</Typography>
+            <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, bgcolor: 'divider' }} />
+          </Box>
         ))}
-      </div>
+      </Box>
 
       {/* Grid and events */}
-      <div className="relative flex-1" style={{ height: `${totalMins * pxPerMin}px` }}>
+      <Box sx={{ position: 'relative', flex: 1, height: `${totalMins * pxPerMin}px` }}>
         {/* Hour lines */}
         {hours.map((h) => (
-          <div key={h} className="absolute left-0 right-0" style={{ top: `${(h*60 - startMins) * pxPerMin}px`, height: 1 }}>
-            <div className="w-full h-px bg-black/10 dark:bg-white/10" />
-          </div>
+          <Box key={h} sx={{ position: 'absolute', left: 0, right: 0, top: `${(h*60 - startMins) * pxPerMin}px`, height: 1, bgcolor: 'divider' }} />
         ))}
 
         {/* Now line if within workday */}
         {nowMins >= startMins && nowMins <= endMins && (
-          <div className="absolute left-0 right-0" style={{ top: `${(nowMins - startMins) * pxPerMin}px` }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-red-600" />
-              <div className="h-px bg-red-600 flex-1" />
-            </div>
-          </div>
+          <Box sx={{ position: 'absolute', left: 0, right: 0, top: `${(nowMins - startMins) * pxPerMin}px` }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'error.main' }} />
+              <Box sx={{ height: 1, bgcolor: 'error.main', flex: 1 }} />
+            </Box>
+          </Box>
         )}
 
         {/* Events */}
@@ -65,13 +64,27 @@ export default function CalendarDay() {
           const task = state.tasks.find(t => t.id === evt.taskId);
           if (!task) return null;
           return (
-            <div key={evt.id} className="absolute left-2 right-2 rounded border bg-blue-500/15 dark:bg-blue-400/15 border-blue-400/50 overflow-hidden" style={{ top, height, minHeight: 22 }}>
-              <div className="text-xs px-2 py-1 font-medium truncate">{task.title}</div>
-              <div className="text-[10px] opacity-70 px-2">{task.durationMinutes} min</div>
-            </div>
+            <Paper
+              key={evt.id}
+              variant="outlined"
+              sx={(theme) => ({
+                position: 'absolute',
+                left: 8,
+                right: 8,
+                top,
+                height,
+                minHeight: 22,
+                overflow: 'hidden',
+                backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                borderColor: theme.palette.primary.light,
+              })}
+            >
+              <Typography variant="caption" sx={{ px: 1, pt: 0.5, fontWeight: 600, display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</Typography>
+              <Typography variant="caption" sx={{ px: 1, opacity: 0.7 }}>{task.durationMinutes} min</Typography>
+            </Paper>
           );
         })}
-      </div>
-    </div>
+      </Box>
+    </Paper>
   );
 }
